@@ -8,7 +8,6 @@ from psycopg2.extras import RealDictCursor
 app = Flask(__name__)
 CORS(app)
 
-
 @app.route('/get_polygons', methods=["GET", "POST"])
 def get_polygons():
     query = """SELECT 
@@ -53,33 +52,33 @@ GROUP BY
 @app.route('/get_earthquakes', methods=["GET", "POST"])
 def get_earthquakes():
     query = """SELECT 
-                ogc_fid ,
-                  ST_AsGeoJSON(way) AS geometry
-                FROM 
-                  eq_data
-
-
-                    """
+          ogc_fid,
+          magnitude,
+          ST_AsGeoJSON(way) AS geometry
+        FROM 
+          eq_data;
+    """
     # TODO: connect to the database
     #       fetch the earthquakes that you imported into the database (see database/import_script.sh)
     #       transform the database result into a list
     with psycopg2.connect(host="database", port=5432, dbname="gis_db", user="gis_user", password="gis_pass") as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(query)
-            results = cursor.fetchall()
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute(query)
+                results = cursor.fetchall()
+
     # sample earthquake
 
-    earthquakes = [{
+    earthquakes= [
         {
-            "type": "Feature",
-            "properties": {
-                "ogc_fid": row[0],  # Index 0 corresponds 
-                "magnitude": row[1],    # Index 1 corresponds 
-            },
-            "geometry": json.loads(row[2]),  # Index 2 corresponds to geometry
+           "type": "Feature",
+                "properties": {
+                    "ogc_fid": row["ogc_fid"],
+                    "magnitude": row["magnitude"],
+                },
+                "geometry": json.loads(row["geometry"]),
         }
         for row in results
-    }] 
+    ]
     return jsonify({
         "type": "FeatureCollection", "features": earthquakes
     }), 200

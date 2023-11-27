@@ -18,7 +18,10 @@ export class DataService {
   /**
    * TODO: Get Earthquakes from Backend
    */
-  public getEarthquakes(): Observable<FeatureCollection> {}
+  public getEarthquakes(): Observable<FeatureCollection> {
+    const url = "http://localhost:5000/get_earthquakes";
+    return this.http.post(url,null,httpOptions);
+  }
 
   /**
    * TODO: Get Polygons from Backend

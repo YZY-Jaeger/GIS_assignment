@@ -14,24 +14,7 @@ export class MapComponent implements OnInit {
   private polygonLayer: L.LayerGroup<any> = L.layerGroup();
 
   //sample data containing one earthquake
-  private earthquakeData: FeatureCollection = {
-    features: [{
-      type: "Feature",
-      properties: {
-        id: "8015866",
-        lat: "63.858",
-        lon: "-22.396",
-        mag: "4.2",
-        time: "1700121962"  
-      },
-      geometry: {
-        type: "Point",  
-        coordinates: [63.858, -22.396]
-      }
-    }
-    ],
-    type: "FeatureCollection"
-  }
+
 //////////////
 private updatePolygonLayer(data: FeatureCollection) {
   console.log('Updating polygon layer with data:', data);
@@ -65,28 +48,27 @@ private updatePolygonLayer(data: FeatureCollection) {
 
 
 /////////////
-  private updateEarthquakeLayer() {
-    if (!this.map) {
-      return;
-    }
-
-    // remove old layerGroup
-    this.map.removeLayer(this.earthquakesLayer);
-
-    // create a marker for each earthquake
-    const markers = this.earthquakeData.features.map((f:any) =>
-      L.circleMarker(f.geometry.coordinates, {
-        radius: parseFloat(f.properties.mag),
-        color: 'red'
-      }).bindPopup("magnitude: "+f.properties.mag)
-
-    );
-
-    // create a new layer group and add it to the map
-    this.earthquakesLayer = L.layerGroup(markers);
-    markers.forEach((m:L.Layer) => m.addTo(this.earthquakesLayer));
-    this.map.addLayer(this.earthquakesLayer);
+private updateEarthquakeLayer(data: FeatureCollection) {
+  if (!this.map) {
+    return;
   }
+
+  // Remove old layerGroup
+  this.map.removeLayer(this.earthquakesLayer);
+
+  // Create a marker for each earthquake
+  const markers = data.features.map((feature: any) =>
+    L.circleMarker(feature.geometry.coordinates.reverse(), {  // Reverse the coordinates
+      radius: parseFloat(feature.properties.magnitude),
+      color: 'red',
+    }).bindPopup('Magnitude: ' + feature.properties.magnitude)
+  );
+
+  // Create a new layer group and add it to the map
+  this.earthquakesLayer = L.layerGroup(markers);
+  this.earthquakesLayer.addTo(this.map);  // Add to the map
+  console.log('Earthquakes layer updated successfully.');
+}
 
 
   constructor(private dataService:DataService){}
@@ -134,7 +116,15 @@ private updatePolygonLayer(data: FeatureCollection) {
     );
 
 
-    this.updateEarthquakeLayer();
+    this.dataService.getEarthquakes().subscribe(
+      (data: FeatureCollection) => {
+        console.log('Received earthquake data:', data);
+        this.updateEarthquakeLayer(data);
+      },
+      (error) => {
+        console.error('Error fetching earthquake data:', error);
+      }
+    );
   }
 
 }
