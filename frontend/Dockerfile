@@ -14,5 +14,6 @@ COPY ./code/ ${APP_DIR}
 
 # run ng serve
 RUN npm install
+RUN npm install d3
 
 CMD npm start -- --host 0.0.0.0 --poll 2000

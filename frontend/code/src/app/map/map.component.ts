@@ -1,6 +1,9 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Feature, FeatureCollection, Geometry } from 'geojson';
 import * as L from 'leaflet';
+import { scaleLinear } from 'd3-scale';
+import { range } from 'd3-array';
+
 import { DataService } from '../services/data.service';
 
 @Component({
@@ -8,6 +11,9 @@ import { DataService } from '../services/data.service';
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.scss'],
 })
+
+
+
 export class MapComponent implements OnInit {
   private map!: L.Map;
   private earthquakesLayer: L.LayerGroup<any> = L.layerGroup();
@@ -48,6 +54,10 @@ private updatePolygonLayer(data: FeatureCollection) {
 
 
 /////////////
+private colorScale = scaleLinear<string>()
+  .domain([1, 5])  // Magnitude values range from 1 to 5
+  .range(['blue', 'red']);  // Blue to red gradient
+
 private updateEarthquakeLayer(data: FeatureCollection) {
   if (!this.map) {
     return;
@@ -59,8 +69,8 @@ private updateEarthquakeLayer(data: FeatureCollection) {
   // Create a marker for each earthquake
   const markers = data.features.map((feature: any) =>
     L.circleMarker(feature.geometry.coordinates.reverse(), {  // Reverse the coordinates
-      radius: parseFloat(feature.properties.magnitude),
-      color: 'red',
+      radius: parseFloat(feature.properties.magnitude),//mapped to magnitude
+      color: this.colorScale(parseFloat(feature.properties.magnitude)), // Use color scale, blue to red, magnitude small to big
     }).bindPopup('Magnitude: ' + feature.properties.magnitude)
   );
 
